@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { deleteObject, objectExists, presignGet, presignPut } from "./r2.ts";
@@ -19,6 +20,10 @@ const app = new Hono<Env>().basePath("/api");
 // Auth: every route below runs as the caller, so RLS enforces ownership.
 // user_id is always derived from the verified token, never from the request.
 // ---------------------------------------------------------------------------
+
+// Browsers (the web build) preflight these calls. Auth is a bearer token, not cookies, so any origin is fine.
+// Registered before the auth middleware so the token-less OPTIONS preflight is answered, and so errors carry the headers too.
+app.use("*", cors({ origin: "*" }));
 
 app.get("/health", (c) => c.json({ status: "ok" }));
 
